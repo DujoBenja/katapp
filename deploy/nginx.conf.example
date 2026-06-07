@@ -1,0 +1,36 @@
+# katApp nginx site config
+# 1. Edit server_name below to your domain.
+# 2. Copy to the server:  /etc/nginx/sites-available/katapp
+# 3. Enable it:           ln -s /etc/nginx/sites-available/katapp /etc/nginx/sites-enabled/
+# 4. Test + reload:       nginx -t && systemctl reload nginx
+# 5. Add HTTPS:           certbot --nginx -d yourdomain.com -d www.yourdomain.com
+#    (certbot rewrites this file to add the SSL lines automatically)
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name pivskatvrdja.hr www.pivskatvrdja.hr;
+
+    root /var/www/katapp;
+    index index.html;
+
+    # Gzip for faster loads
+    gzip on;
+    gzip_types text/css application/javascript image/svg+xml;
+    gzip_min_length 1024;
+
+    # Cache the fingerprinted assets aggressively; never cache index.html
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    # SPA fallback: every route serves index.html so /admin, /login work on refresh
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
