@@ -70,8 +70,6 @@ export default function ProductForm({ product, categories, onSubmit, onCancel })
 
   return (
     <form className="form card-form" onSubmit={handleSubmit}>
-      <h3>{product ? 'Uredi proizvod' : 'Dodaj proizvod'}</h3>
-
       <label>
         Naziv
         <input
