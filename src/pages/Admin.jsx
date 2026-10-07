@@ -18,6 +18,16 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(null) // product being edited, or null
+  const [search, setSearch] = useState('')
+
+  const q = search.trim().toLowerCase()
+  const visibleProducts = q
+    ? products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          categoryLabel(p.categories).toLowerCase().includes(q)
+      )
+    : products
 
   async function refresh() {
     const [cats, prods] = await Promise.all([listCategories(), listProducts()])
@@ -61,6 +71,20 @@ export default function Admin() {
     }
   }
 
+  // Close the edit dialog on Escape and lock background scroll while it's open.
+  useEffect(() => {
+    if (!editing) return
+    function onKey(e) {
+      if (e.key === 'Escape') setEditing(null)
+    }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [editing])
+
   if (loading) return <div className="container loading">Učitavanje…</div>
 
   return (
@@ -71,26 +95,33 @@ export default function Admin() {
       {/* Product form on the left, categories on the right (stacked on narrow screens). */}
       <div className="admin-columns">
         <section className="panel">
-          <h2>{editing ? 'Uredi proizvod' : 'Dodaj proizvod'}</h2>
-          <ProductForm
-            key={editing?.id ?? 'new'}
-            product={editing}
-            categories={categories}
-            onSubmit={editing ? handleUpdate : handleCreate}
-            onCancel={() => setEditing(null)}
-          />
+          <h2>Dodaj proizvod</h2>
+          <ProductForm categories={categories} onSubmit={handleCreate} />
         </section>
 
         <CategoryManager categories={categories} onChange={refresh} />
       </div>
 
       <section className="panel">
-        <h2>Proizvodi ({products.length})</h2>
+        <h2>
+          Proizvodi ({q ? `${visibleProducts.length} od ${products.length}` : products.length})
+        </h2>
+        {products.length > 0 && (
+          <input
+            type="search"
+            className="input admin-search"
+            placeholder="Pretraži po nazivu ili kategoriji…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        )}
         {products.length === 0 ? (
           <p className="muted">Još nema proizvoda. Dodajte prvi iznad.</p>
+        ) : visibleProducts.length === 0 ? (
+          <p className="muted">Nijedan proizvod ne odgovara pretrazi.</p>
         ) : (
           <ul className="admin-list">
-            {products.map((p) => (
+            {visibleProducts.map((p) => (
               <li key={p.id} className="admin-row">
                 <div className="admin-thumb">
                   {p.image_url ? (
@@ -130,6 +161,26 @@ export default function Admin() {
           </ul>
         )}
       </section>
+
+      {/* Edit dialog over the list, so editing works wherever the list is scrolled.
+          Clicking the backdrop doesn't close it, to avoid losing unsaved changes. */}
+      {editing && (
+        <div className="modal-overlay">
+          <div className="modal edit-modal" role="dialog" aria-modal="true">
+            <button className="modal-close" onClick={() => setEditing(null)} aria-label="Zatvori">
+              ✕
+            </button>
+            <h2 className="edit-modal-title">Uredi proizvod</h2>
+            <ProductForm
+              key={editing.id}
+              product={editing}
+              categories={categories}
+              onSubmit={handleUpdate}
+              onCancel={() => setEditing(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

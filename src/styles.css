@@ -613,6 +613,22 @@ button.card:hover {
   }
 }
 
+.admin-search {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Admin: edit-product dialog */
+.edit-modal-title {
+  margin: 0;
+  padding: 22px 24px 0;
+}
+.edit-modal .card-form {
+  border: none;
+  box-shadow: none;
+  padding: 16px 24px 24px;
+}
+
 /* Category tree (admin) */
 .category-form {
   max-width: none;
