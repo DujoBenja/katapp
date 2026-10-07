@@ -5,6 +5,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  setProductFeatured,
+  categoryLabel,
 } from '../data'
 import { formatEUR } from '../format'
 import CategoryManager from '../components/CategoryManager'
@@ -50,6 +52,15 @@ export default function Admin() {
     }
   }
 
+  async function handleToggleFeatured(product) {
+    try {
+      await setProductFeatured(product.id, !product.is_featured)
+      await refresh()
+    } catch (e) {
+      setError(e.message || 'Spremanje nije uspjelo')
+    }
+  }
+
   if (loading) return <div className="container loading">Učitavanje…</div>
 
   return (
@@ -57,18 +68,21 @@ export default function Admin() {
       <h1>Administracija</h1>
       {error && <p className="error">{error}</p>}
 
-      <CategoryManager categories={categories} onChange={refresh} />
+      {/* Product form on the left, categories on the right (stacked on narrow screens). */}
+      <div className="admin-columns">
+        <section className="panel">
+          <h2>{editing ? 'Uredi proizvod' : 'Dodaj proizvod'}</h2>
+          <ProductForm
+            key={editing?.id ?? 'new'}
+            product={editing}
+            categories={categories}
+            onSubmit={editing ? handleUpdate : handleCreate}
+            onCancel={() => setEditing(null)}
+          />
+        </section>
 
-      <section className="panel">
-        <h2>{editing ? 'Uredi proizvod' : 'Dodaj proizvod'}</h2>
-        <ProductForm
-          key={editing?.id ?? 'new'}
-          product={editing}
-          categories={categories}
-          onSubmit={editing ? handleUpdate : handleCreate}
-          onCancel={() => setEditing(null)}
-        />
-      </section>
+        <CategoryManager categories={categories} onChange={refresh} />
+      </div>
 
       <section className="panel">
         <h2>Proizvodi ({products.length})</h2>
@@ -89,10 +103,18 @@ export default function Admin() {
                   <strong>{p.name}</strong>
                   <span className="muted">
                     {formatEUR(p.price)}
-                    {p.categories?.name ? ` · ${p.categories.name}` : ''}
+                    {p.categories ? ` · ${categoryLabel(p.categories)}` : ''}
                   </span>
                 </div>
                 <div className="admin-actions">
+                  <button
+                    className={`btn btn-ghost star-btn${p.is_featured ? ' active' : ''}`}
+                    title={p.is_featured ? 'Makni iz omiljenih' : 'Označi kao omiljeni'}
+                    aria-pressed={!!p.is_featured}
+                    onClick={() => handleToggleFeatured(p)}
+                  >
+                    {p.is_featured ? '★' : '☆'}
+                  </button>
                   <button className="btn btn-ghost" onClick={() => setEditing(p)}>
                     Uredi
                   </button>

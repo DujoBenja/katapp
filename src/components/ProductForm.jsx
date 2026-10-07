@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { buildCategoryTree } from '../data'
 
-const empty = { name: '', description: '', price: '', category_id: '' }
+const empty = { name: '', description: '', price: '', category_id: '', is_featured: false }
 
 // `product` is set when editing; null/undefined when creating.
 export default function ProductForm({ product, categories, onSubmit, onCancel }) {
@@ -17,6 +18,7 @@ export default function ProductForm({ product, categories, onSubmit, onCancel })
         description: product.description ?? '',
         price: product.price ?? '',
         category_id: product.category_id ?? '',
+        is_featured: !!product.is_featured,
       })
       setPreview(product.image_url ?? null)
     } else {
@@ -49,6 +51,7 @@ export default function ProductForm({ product, categories, onSubmit, onCancel })
         ...fields,
         file,
         image_url: product?.image_url ?? null,
+        featured_at: product?.featured_at ?? null,
       })
       if (!product) {
         // Reset after a successful create.
@@ -112,14 +115,28 @@ export default function ProductForm({ product, categories, onSubmit, onCancel })
             <option value="">
               {noCategories ? 'Prvo dodajte kategoriju' : 'Bez kategorije'}
             </option>
-            {categories.map((c) => (
+            {buildCategoryTree(categories).flatMap((c) => [
               <option key={c.id} value={c.id}>
                 {c.name}
-              </option>
-            ))}
+              </option>,
+              ...c.children.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {'   ↳ '}{s.name}
+                </option>
+              )),
+            ])}
           </select>
         </label>
       </div>
+
+      <label className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={fields.is_featured}
+          onChange={(e) => update('is_featured', e.target.checked)}
+        />
+        ★ Omiljeni proizvod (prikazuje se prvi)
+      </label>
 
       <label>
         Slika

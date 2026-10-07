@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { listProducts, listCategories } from '../data'
+import CategoryCard from '../components/CategoryCard'
 import ProductCard from '../components/ProductCard'
 import ProductModal from '../components/ProductModal'
 
+// Category grid plus featured products; typing in search switches to product results.
 export default function Home() {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -27,11 +28,14 @@ export default function Home() {
     }
   }, [])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return products
-    return products.filter((p) => p.name.toLowerCase().includes(q))
-  }, [products, search])
+  const q = search.trim().toLowerCase()
+  const results = useMemo(
+    () => (q ? products.filter((p) => p.name.toLowerCase().includes(q)) : []),
+    [products, q]
+  )
+  // listProducts already returns featured first, most recently starred first.
+  const featured = products.filter((p) => p.is_featured)
+  const topCategories = categories.filter((c) => !c.parent_id)
 
   return (
     <div className="container">
@@ -45,32 +49,47 @@ export default function Home() {
         />
       </div>
 
-      {categories.length > 0 && (
-        <div className="category-filter">
-          {categories.map((c) => (
-            <Link key={c.id} to={`/kategorija/${c.id}`} className="chip-btn">
-              {c.name}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {loading && <p className="muted">Učitavanje proizvoda…</p>}
+      {loading && <p className="muted">Učitavanje…</p>}
       {error && <p className="error">{error}</p>}
 
-      {!loading && !error && filtered.length === 0 && (
-        <p className="muted empty-state">
-          {products.length === 0
-            ? 'Još nema proizvoda. Provjerite uskoro!'
-            : 'Nijedan proizvod ne odgovara pretrazi.'}
-        </p>
+      {!loading && !error && q && (
+        <>
+          {results.length === 0 ? (
+            <p className="muted empty-state">Nijedan proizvod ne odgovara pretrazi.</p>
+          ) : (
+            <div className="grid">
+              {results.map((p) => (
+                <ProductCard key={p.id} product={p} onOpen={setSelected} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      <div className="grid">
-        {filtered.map((p) => (
-          <ProductCard key={p.id} product={p} onOpen={setSelected} />
-        ))}
-      </div>
+      {!loading && !error && !q && (
+        <>
+          {topCategories.length === 0 ? (
+            <p className="muted empty-state">Još nema kategorija. Provjerite uskoro!</p>
+          ) : (
+            <div className="grid">
+              {topCategories.map((c) => (
+                <CategoryCard key={c.id} category={c} />
+              ))}
+            </div>
+          )}
+
+          {featured.length > 0 && (
+            <section className="home-section">
+              <h2 className="section-title">Izdvojeno</h2>
+              <div className="grid">
+                {featured.map((p) => (
+                  <ProductCard key={p.id} product={p} onOpen={setSelected} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
 
       <ProductModal product={selected} onClose={() => setSelected(null)} />
     </div>

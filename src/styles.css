@@ -596,11 +596,130 @@ button.card:hover {
   gap: 8px;
 }
 
+/* Admin: product form (left) + categories (right) */
+.admin-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.admin-columns > .panel {
+  min-width: 0;
+}
+@media (max-width: 860px) {
+  .admin-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+/* Category tree (admin) */
+.category-form {
+  max-width: none;
+  flex-wrap: wrap;
+}
+.category-form .input {
+  min-width: 180px;
+}
+.category-tree {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.category-add + .hint {
+  margin: 8px 0 0;
+  font-size: 0.88rem;
+}
+.category-file {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.chip-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: -6px;
+}
+.category-editor {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  max-width: 420px;
+}
+
+/* Home: featured section below the category grid */
+.home-section {
+  margin-top: 40px;
+}
+.section-title {
+  margin: 0 0 16px;
+}
+.subcategory-grid {
+  margin-bottom: 32px;
+}
+.subcategory-list {
+  margin: 8px 0 0 22px;
+}
+.subcategory-list .chip {
+  background: #f4f5f7;
+}
+
+/* Featured (omiljeni) products */
+.form label.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.star-btn {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+}
+.star-btn.active {
+  color: #e0a100;
+}
+
 @media (max-width: 540px) {
   .form-row {
     flex-direction: column;
   }
   .admin-row {
     flex-wrap: wrap;
+  }
+}
+
+/* Phones: two cards per row (categories + products) with tighter spacing. */
+@media (max-width: 560px) {
+  .container {
+    padding: 16px;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .card-body {
+    padding: 10px 10px 12px;
+    gap: 6px;
+  }
+  .card-title {
+    font-size: 0.9rem;
+    /* Long product codes (e.g. 80mmx12mmx60m) must wrap inside the narrow card. */
+    overflow-wrap: anywhere;
+  }
+  .badge {
+    font-size: 0.68rem;
+    padding: 2px 8px;
+  }
+  .price {
+    font-size: 0.92rem;
   }
 }

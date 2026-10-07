@@ -90,6 +90,31 @@ create policy "auth delete images" on storage.objects for delete
 **Sigurnost (RLS):** svatko može **čitati** proizvode/kategorije; samo prijavljeni admin
 može **mijenjati**.
 
+### 3a-2. Potkategorije i omiljeni proizvodi (dodano 2026-10-07)
+Pokrenuto jednom nakon skripte iz 3a (SQL Editor):
+
+```sql
+-- Potkategorije: kategorija može imati nadređenu kategoriju (jedna razina).
+-- "restrict": kategorija s potkategorijama ne može se obrisati dok se one ne obrišu.
+alter table categories
+  add column if not exists parent_id uuid references categories(id) on delete restrict;
+
+-- Naziv je jedinstven unutar iste nadređene kategorije, a ne globalno.
+alter table categories drop constraint if exists categories_name_key;
+create unique index if not exists categories_parent_name_uniq
+  on categories (coalesce(parent_id, '00000000-0000-0000-0000-000000000000'::uuid), name);
+
+-- Omiljeni proizvodi prikazuju se prvi.
+alter table products add column if not exists is_featured boolean not null default false;
+
+-- Vrijeme označavanja: zadnje označeni omiljeni proizvod prikazuje se prvi.
+alter table products add column if not exists featured_at timestamptz;
+update products set featured_at = now() where is_featured and featured_at is null;
+
+-- Slika kategorije (prikazuje se u gridu kategorija na početnoj stranici).
+alter table categories add column if not exists image_url text;
+```
+
 ### 3b. Admin korisnik
 Supabase → **Authentication → Users → Add user** (e-pošta + lozinka). Tom prijavom se
 ulazi na `/admin`.
